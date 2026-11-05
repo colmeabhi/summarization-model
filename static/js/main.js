@@ -1,46 +1,51 @@
+// small extras for the home page, the form works without this file too
+
 const form = document.getElementById('summary-form');
 const textarea = document.getElementById('text-input');
-const statusEl = document.getElementById('status');
-const summaryEl = document.getElementById('summary-output');
+const counter = document.getElementById('word-counter');
 const submitBtn = document.getElementById('submit-btn');
+const sampleBtn = document.getElementById('sample-btn');
+const copyBtn = document.getElementById('copy-btn');
 
-function setStatus(message, isError) {
-  statusEl.textContent = message;
-  statusEl.style.color = isError ? '#cc0000' : '#333333';
-  statusEl.classList.remove('hidden');
+const SAMPLE_TEXT =
+  'Highways are lines of communication that touch life on many levels. ' +
+  'They connect cities, towns and villages across the country. ' +
+  'In 2020, over 5 million people used the National Highway network every day. ' +
+  'Good roads also help trade grow because goods can move quickly and cheaply. ' +
+  'Without them, farmers would struggle to get their crops to the market. ' +
+  'The government plans to build 200 new roads by 2030. ' +
+  'Experts say this will boost the economy and create thousands of jobs.';
+
+function countWords(text) {
+  const words = text.trim().split(/\s+/);
+  return text.trim() === '' ? 0 : words.length;
 }
 
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const text = textarea.value.trim();
-  if (!text) {
-    setStatus('Please enter text to summarise.', true);
-    return;
-  }
+function updateCounter() {
+  counter.textContent = countWords(textarea.value) + ' words';
+}
 
-  submitBtn.disabled = true;
-  setStatus('Generating summary, please wait...');
-  summaryEl.classList.add('hidden');
+textarea.addEventListener('input', updateCounter);
+updateCounter();
 
-  try {
-    const response = await fetch('/post_summary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ textString: text }),
-    });
-
-    if (!response.ok) {
-      const errorPayload = await response.json().catch(() => ({}));
-      throw new Error(errorPayload.error || 'Request failed');
-    }
-
-    const data = await response.json();
-    summaryEl.textContent = data.summary || 'No summary returned.';
-    summaryEl.classList.remove('hidden');
-    setStatus('Summary generated successfully.');
-  } catch (err) {
-    setStatus(err.message, true);
-  } finally {
-    submitBtn.disabled = false;
-  }
+sampleBtn.addEventListener('click', function () {
+  textarea.value = SAMPLE_TEXT;
+  updateCounter();
 });
+
+form.addEventListener('submit', function () {
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Summarising...';
+});
+
+if (copyBtn) {
+  copyBtn.addEventListener('click', function () {
+    const summary = document.getElementById('summary-text').textContent;
+    navigator.clipboard.writeText(summary).then(function () {
+      copyBtn.textContent = 'Copied!';
+      setTimeout(function () {
+        copyBtn.textContent = 'Copy';
+      }, 1500);
+    });
+  });
+}

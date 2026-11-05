@@ -7,6 +7,7 @@
   <form id="summary-form" class="card" method="post" action="{{ url_for('pages.home') }}">
     <label for="text-input">Text to summarise</label>
     <textarea id="text-input" name="text" placeholder="Paste your text here" required>{{ text }}</textarea>
+    <div class="counter" id="word-counter"></div>
 
     <div class="form-row">
       <div>
@@ -17,7 +18,10 @@
           <option value="long" {{ 'selected' if length == 'long' }}>Long</option>
         </select>
       </div>
-      <button type="submit" id="submit-btn">Generate Summary</button>
+      <div>
+        <button type="button" id="sample-btn" class="button-secondary">Try a sample</button>
+        <button type="submit" id="submit-btn">Generate Summary</button>
+      </div>
     </div>
   </form>
 
@@ -27,7 +31,10 @@
 
   {% if result %}
     <section class="card result">
-      <h2>Summary</h2>
+      <div class="result-header">
+        <h2>Summary</h2>
+        <button type="button" id="copy-btn" class="button-secondary">Copy</button>
+      </div>
       <p id="summary-text">{{ result.summary }}</p>
 
       <ul class="stats">
@@ -39,4 +46,8 @@
       </ul>
     </section>
   {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}
