@@ -1,10 +1,35 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
+
+from summarygenerator import SUMMARY_LENGTHS, summarize
+from .utils import check_text
 
 
 pages = Blueprint('pages', __name__)
 
 
-@pages.route('/')
+@pages.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('index.html', active_page='home')
+    text = ''
+    length = 'medium'
+    result = None
+    error = None
 
+    if request.method == 'POST':
+        text = request.form.get('text', '')
+        length = request.form.get('length', 'medium')
+
+        if length not in SUMMARY_LENGTHS:
+            length = 'medium'
+
+        error = check_text(text)
+        if not error:
+            result = summarize(text, SUMMARY_LENGTHS[length])
+
+    return render_template(
+        'index.html',
+        active_page='home',
+        text=text,
+        length=length,
+        result=result,
+        error=error,
+    )

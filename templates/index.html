@@ -4,9 +4,39 @@
   <h1>Summarise your text</h1>
   <p class="subtitle">Paste an article or a few paragraphs and get the most important sentences back.</p>
 
-  <form id="summary-form" method="post" action="{{ url_for('pages.home') }}">
+  <form id="summary-form" class="card" method="post" action="{{ url_for('pages.home') }}">
     <label for="text-input">Text to summarise</label>
-    <textarea id="text-input" name="text" placeholder="Paste your text here" required>{{ text or '' }}</textarea>
-    <button type="submit" id="submit-btn">Generate Summary</button>
+    <textarea id="text-input" name="text" placeholder="Paste your text here" required>{{ text }}</textarea>
+
+    <div class="form-row">
+      <div>
+        <label for="length-select">Summary length</label>
+        <select id="length-select" name="length">
+          <option value="short" {{ 'selected' if length == 'short' }}>Short</option>
+          <option value="medium" {{ 'selected' if length == 'medium' }}>Medium</option>
+          <option value="long" {{ 'selected' if length == 'long' }}>Long</option>
+        </select>
+      </div>
+      <button type="submit" id="submit-btn">Generate Summary</button>
+    </div>
   </form>
+
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+
+  {% if result %}
+    <section class="card result">
+      <h2>Summary</h2>
+      <p id="summary-text">{{ result.summary }}</p>
+
+      <ul class="stats">
+        <li><strong>{{ result.summary_count }}</strong> of {{ result.original_count }} sentences</li>
+        <li><strong>{{ result.summary_words }}</strong> of {{ result.original_words }} words</li>
+        {% if result.original_words > 0 %}
+          <li><strong>{{ (100 - result.summary_words * 100 // result.original_words) }}%</strong> shorter</li>
+        {% endif %}
+      </ul>
+    </section>
+  {% endif %}
 {% endblock %}
