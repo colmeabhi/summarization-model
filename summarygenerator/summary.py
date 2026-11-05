@@ -5,7 +5,7 @@ import numpy
 from .entity import namedEntityRecog
 # Use simple RBM replacement to avoid Theano compatibility issues
 from .rbm_simple import test_rbm_simple as test_rbm
-from .resources import cwd, sentenceLengths
+
 from .text_features import (
     centroidSimilarity,
     numericToken,
@@ -27,7 +27,7 @@ def executeForAFile(text) :
     print(text)
     sentences = split_into_sentences(text)
     text_len = len(sentences)
-    sentenceLengths.append(text_len)
+
 
     tokenized_sentences = remove_stop_words(sentences)
     tagged = posTagger(remove_stop_words(sentences))
