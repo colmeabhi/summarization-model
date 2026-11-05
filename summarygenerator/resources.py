@@ -1,3 +1,4 @@
+import os
 import re
 
 import nltk
@@ -6,22 +7,29 @@ from nltk.stem import PorterStemmer
 
 
 # nltk 3.9 renamed some of the data packages (the *_tab / *_eng ones),
-# so we download both old and new names to be safe
-NLTK_PACKAGES = [
-    'punkt',
-    'punkt_tab',
-    'averaged_perceptron_tagger',
-    'averaged_perceptron_tagger_eng',
-    'maxent_ne_chunker',
-    'maxent_ne_chunker_tab',
-    'words',
-    'stopwords',
-]
+# so we download both old and new names to be safe.
+# the value is where nltk keeps it, so we can check if its already there
+NLTK_PACKAGES = {
+    'punkt': 'tokenizers/punkt',
+    'punkt_tab': 'tokenizers/punkt_tab',
+    'averaged_perceptron_tagger': 'taggers/averaged_perceptron_tagger',
+    'averaged_perceptron_tagger_eng': 'taggers/averaged_perceptron_tagger_eng',
+    'maxent_ne_chunker': 'chunkers/maxent_ne_chunker',
+    'maxent_ne_chunker_tab': 'chunkers/maxent_ne_chunker_tab',
+    'words': 'corpora/words',
+    'stopwords': 'corpora/stopwords',
+}
 
 
 def download_nltk_data():
-    for package in NLTK_PACKAGES:
-        nltk.download(package, quiet=True)
+    # NLTK_DATA lets us keep the data inside the project folder on the server
+    download_dir = os.environ.get('NLTK_DATA')
+
+    for package, path in NLTK_PACKAGES.items():
+        try:
+            nltk.data.find(path)
+        except LookupError:
+            nltk.download(package, download_dir=download_dir, quiet=True)
 
 
 download_nltk_data()
