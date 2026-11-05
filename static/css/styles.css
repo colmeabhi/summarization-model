@@ -99,6 +99,14 @@ h2 {
   margin-top: 20px;
 }
 
+.card p:first-child {
+  margin-top: 0;
+}
+
+.card p:last-child {
+  margin-bottom: 0;
+}
+
 /* form */
 label {
   display: block;
@@ -129,6 +137,12 @@ select:focus {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 12px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .counter {
@@ -216,7 +230,7 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 10px 14px;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
   position: relative;
 }
 
@@ -225,7 +239,7 @@ button:disabled {
   content: "\2193";
   position: absolute;
   left: 22px;
-  bottom: -19px;
+  bottom: -22px;
   color: var(--muted);
 }
 
@@ -286,6 +300,7 @@ pre {
     margin-left: 10px;
   }
 
+  .buttons,
   .form-row button {
     width: 100%;
   }
