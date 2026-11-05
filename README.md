@@ -1,90 +1,95 @@
-# Summary Generator Flask API
+# Summary Generator
 
-This project exposes a Flask-based HTTP API that summarises free-form text. It combines classic NLP feature extraction (tokenisation, TF-ISF, NER, proper noun density, etc.) with a PCA-based feature enhancement system that scores sentences and selects the most representative subset. The API returns the extracted summary as JSON.
+A small Flask website that summarises text. You paste in an article, pick how long you
+want the summary to be, and it gives back the most important sentences from the text.
 
-The codebase is split into focused modules under `summarygenerator/`:
+It is an **extractive** summariser: every sentence is scored with 8 features (TF-ISF,
+proper nouns, named entities, position, length, etc.), the scores are smoothed with PCA
+(this replaced the old Theano RBM) and the best sentences are kept in their original order.
 
-- `app.py` – Flask entry point that exposes the `/post_summary` POST endpoint.
-- `summarygenerator/entity.py` – Named-entity extraction helpers built on NLTK.
-- `summarygenerator/text_features.py` – Text cleaning, tokenisation, sentence scoring and utility functions.
-- `summarygenerator/rbm_simple.py` – PCA-based feature enhancement system (scikit-learn-backed).
-- `summarygenerator/summary.py` – Orchestrates the full summarisation workflow.
-- `summarygenerator/resources.py` – Centralised NLP resources (stopwords, regexes, NLTK downloads).
-- `model_features.py` – Compatibility layer that re-exports the modular API for legacy imports.
+## Project structure
 
-## Prerequisites
+```
+app.py                      # creates the flask app and registers the blueprints
+config.py                   # settings (debug, max text length, port...)
+routes/
+    pages.py                # website pages: home, how it works, about
+    api.py                  # json api: /api/summarize and the old /post_summary
+    errors.py               # 404 / 405 / 413 / 500 pages
+    utils.py                # input checks shared by pages and api
+summarygenerator/
+    preprocessing.py        # splitting into sentences, stopwords, pos tagging
+    features.py             # the sentence scoring features
+    entity.py               # named entity counting with nltk
+    feature_enhancer.py     # PCA step (replacement for the RBM)
+    summary.py              # puts everything together -> summarize()
+    resources.py            # nltk downloads, stopwords, regexes
+templates/                  # jinja templates (base.html + one per page)
+static/                     # css and js
+tests/                      # pytest tests
+```
 
-- Python 3.9+ (the scientific stack is compatible with modern Python versions).
-- Recommended: virtual environment (`venv`, `conda`, or `pipenv`).
+## Running it locally
 
-## Local Setup
+Needs Python 3.10 or newer.
 
 ```bash
-git clone https://github.com/colmeabhi/rbm-summarization-model.git
-cd rbm-summarization-model
+git clone https://github.com/colmeabhi/summarization-model.git
+cd summarization-model
 
-# Create and activate a virtual environment (example using venv)
 python3 -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate        # windows: .venv\Scripts\activate
 
-# Install dependencies
-pip install --upgrade pip
 pip install -r requirements.txt
-```
-
-On first run, NLTK will download the required corpora (`averaged_perceptron_tagger`, `punkt`, `maxent_ne_chunker`, `words`, and `stopwords`). The download is triggered automatically at import time; ensure the process has permission to write to `~/nltk_data`.
-
-## Running the API
-
-```bash
-# Launch the Flask development server (runs on port 5001 by default)
 python3 app.py
-
-# ...or run on a different port using the Flask CLI
-python3 -m flask --app app run --port 5002
 ```
 
-The server logs will indicate if the default port is already in use. Choose an alternative port via `--port` as shown above.
+Then open http://localhost:5001 in your browser.
 
-## Requesting a Summary
+The first start takes a bit longer because NLTK downloads its data (punkt, stopwords,
+the pos tagger and the NE chunker) into `~/nltk_data`.
 
-Endpoint: `POST /post_summary`
+### Settings
 
-Request body (JSON):
+These can be set as environment variables:
 
-```json
-{
-  "textString": "Highways are lines of communication, touching life on many levels..."
-}
-```
+| Variable      | Default             | What it does                          |
+|---------------|---------------------|---------------------------------------|
+| `PORT`        | `5001`              | port the server runs on               |
+| `FLASK_DEBUG` | `0`                 | set to `1` to turn on debug mode      |
+| `SECRET_KEY`  | `dev-key-change-me` | change this if you deploy it anywhere |
 
-Using `curl`:
+## API
+
+`POST /api/summarize`
 
 ```bash
-curl -X POST http://localhost:5001/post_summary \
+curl -X POST http://localhost:5001/api/summarize \
      -H 'Content-Type: application/json' \
-     -d '{"textString": "Your paragraph text here."}'
+     -d '{"text": "Your paragraph text here.", "length": "short"}'
 ```
+
+`length` can be `short`, `medium` (default) or `long`.
 
 Response:
 
 ```json
 {
-  "summary": "The extracted summary sentences concatenated together."
+  "summary": "The picked sentences joined together.",
+  "sentences": ["The picked sentences", "..."],
+  "original_count": 7,
+  "summary_count": 3,
+  "original_words": 80,
+  "summary_words": 30
 }
 ```
 
-## Project Notes
+The old endpoint `POST /post_summary` with `{"textString": "..."}` still works and
+returns `{"summary": "..."}`.
 
-- The PCA-based feature enhancement processes the feature matrix on every request. Processing time depends on input size and typically completes quickly.
-- `summarygenerator/resources.py` captures global state (stopword lists, compiled regexes, current working directory).
-- The project uses modern versions of NumPy, pandas, and scikit-learn for optimal compatibility and performance.
+## Tests
 
-## Testing & Development
-
-- Run the Flask app and send sample requests as shown above.
-- Monitor the console output to see feature extraction and processing details.
-- If you adjust NLTK usage, remember to download any additional corpora in `summarygenerator/resources.py`.
-
-Contributions and improvements to the summarisation pipeline or the API structure are welcome.
-
+```bash
+pip install pytest
+python -m pytest
+```
