@@ -1,30 +1,24 @@
-# coding: utf-8
-from flask import Flask, jsonify, render_template, request
+from flask import Flask
 
-import model_features
-
-
-app = Flask(__name__)
-
-
-@app.route('/')
-def index():
-    """Serve a minimal UI for interacting with the summariser."""
-    return render_template('index.html')
+from config import Config
+from routes.api import api
+from routes.errors import errors
+from routes.pages import pages
 
 
-@app.route('/post_summary', methods=['POST'])
-def summary_creator():
-    request_data = request.get_json()
-    if not request_data or 'textString' not in request_data:
-        return jsonify({'error': 'textString is required'}), 400
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
 
-    text = request_data['textString']
-    final_text = model_features.executeForAFile(text)
+    app.register_blueprint(pages)
+    app.register_blueprint(api)
+    app.register_blueprint(errors)
 
-    return jsonify({'summary': final_text})
+    return app
+
+
+app = create_app()
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
-
+    app.run(debug=app.config['DEBUG'], port=app.config['PORT'])

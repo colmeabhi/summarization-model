@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}How it works - Summary Generator{% endblock %}
+
+{% block content %}
+  <h1>How it works</h1>
+  <p class="subtitle">
+    This is an <em>extractive</em> summariser. It does not write new sentences,
+    it picks the most useful sentences from your text and keeps them in the same order.
+  </p>
+
+  <h2>The pipeline</h2>
+  <ol class="pipeline">
+    <li><span class="step">1</span> Split the text into sentences</li>
+    <li><span class="step">2</span> Remove stopwords and stem the words</li>
+    <li><span class="step">3</span> Score every sentence with 8 features</li>
+    <li><span class="step">4</span> Smooth the scores with PCA (in place of an RBM)</li>
+    <li><span class="step">5</span> Pick the best sentences and put them back in order</li>
+  </ol>
+
+  <h2>The 8 features</h2>
+  <table class="features">
+    <thead>
+      <tr><th>Feature</th><th>What it measures</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Thematic words</td><td>How many of the 10 most common words in the text the sentence has</td></tr>
+      <tr><td>Sentence position</td><td>Where the sentence is in the text (start and end are usually important)</td></tr>
+      <tr><td>Sentence length</td><td>Very short sentences (under 3 words) get 0, the rest are compared to the longest one</td></tr>
+      <tr><td>Proper nouns</td><td>How many names of people, places, etc. the sentence has</td></tr>
+      <tr><td>Numbers</td><td>Sentences with numbers usually have facts in them</td></tr>
+      <tr><td>Named entities</td><td>Number of named entities NLTK finds in the sentence</td></tr>
+      <tr><td>TF-ISF</td><td>Like TF-IDF but over sentences instead of documents</td></tr>
+      <tr><td>Centroid similarity</td><td>Cosine similarity to the sentence with the highest TF-ISF</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Example</h2>
+  <div class="card example">
+    <p><strong>Input (5 sentences):</strong> Highways are lines of communication. They connect cities and towns.
+      In 2020, over 5 million people used the National Highway every day. Roads also help trade grow.
+      Experts say this will boost the economy.</p>
+    <p><strong>Short summary:</strong> Highways are lines of communication. Experts say this will boost the economy.</p>
+  </div>
+
+  <h2>Using the API</h2>
+  <p>You can also call it from code:</p>
+  <pre><code>curl -X POST http://localhost:5001/api/summarize \
+     -H 'Content-Type: application/json' \
+     -d '{"text": "Your text here.", "length": "short"}'</code></pre>
+{% endblock %}

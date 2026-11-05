@@ -1,23 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Summary Generator</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
-  </head>
-  <body>
-    <div class="container">
-      <h1>Summary Generator</h1>
-      <form id="summary-form">
-        <label for="text-input">Text to summarise</label>
-        <textarea id="text-input" placeholder="Paste your text here" required></textarea>
-        <button type="submit" id="submit-btn">Generate Summary</button>
-        <div class="status hidden" id="status"></div>
-      </form>
-      <div class="summary hidden" id="summary-output"></div>
-    </div>
+{% extends 'base.html' %}
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-  </body>
-</html>
+{% block content %}
+  <h1>Summarise your text</h1>
+  <p class="subtitle">Paste an article or a few paragraphs and get the most important sentences back.</p>
+
+  <form id="summary-form" class="card" method="post" action="{{ url_for('pages.home') }}">
+    <label for="text-input">Text to summarise</label>
+    <textarea id="text-input" name="text" placeholder="Paste your text here" required>{{ text }}</textarea>
+    <div class="counter" id="word-counter"></div>
+
+    <div class="form-row">
+      <div>
+        <label for="length-select">Summary length</label>
+        <select id="length-select" name="length">
+          <option value="short" {{ 'selected' if length == 'short' }}>Short</option>
+          <option value="medium" {{ 'selected' if length == 'medium' }}>Medium</option>
+          <option value="long" {{ 'selected' if length == 'long' }}>Long</option>
+        </select>
+      </div>
+      <div class="buttons">
+        <button type="button" id="sample-btn" class="button-secondary">Try a sample</button>
+        <button type="submit" id="submit-btn">Generate Summary</button>
+      </div>
+    </div>
+  </form>
+
+  {% if error %}
+    <p class="error">{{ error }}</p>
+  {% endif %}
+
+  {% if result %}
+    <section class="card result">
+      <div class="result-header">
+        <h2>Summary</h2>
+        <button type="button" id="copy-btn" class="button-secondary">Copy</button>
+      </div>
+      <p id="summary-text">{{ result.summary }}</p>
+
+      <ul class="stats">
+        <li><strong>{{ result.summary_count }}</strong> of {{ result.original_count }} sentences</li>
+        <li><strong>{{ result.summary_words }}</strong> of {{ result.original_words }} words</li>
+        {% if result.original_words > 0 %}
+          <li><strong>{{ (100 - result.summary_words * 100 // result.original_words) }}%</strong> shorter</li>
+        {% endif %}
+      </ul>
+    </section>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

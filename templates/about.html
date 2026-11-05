@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}About - Summary Generator{% endblock %}
+
+{% block content %}
+  <h1>About</h1>
+  <p>
+    This project started as a text summariser that used a Restricted Boltzmann Machine (RBM)
+    written in Theano. Theano is not maintained anymore and does not install on new Python
+    versions, so the RBM step was replaced with PCA from scikit-learn which does a similar job
+    of cleaning up the feature scores.
+  </p>
+
+  <h2>Built with</h2>
+  <ul>
+    <li><strong>Flask</strong> for the website and the API</li>
+    <li><strong>NLTK</strong> for tokenising, POS tagging and named entities</li>
+    <li><strong>scikit-learn</strong> and <strong>NumPy</strong> for the feature enhancement</li>
+  </ul>
+
+  <h2>Limitations</h2>
+  <ul>
+    <li>Only works well on English text.</li>
+    <li>It can only pick sentences, it cannot rewrite them.</li>
+    <li>Very long texts are slow because every sentence is compared to every other sentence.</li>
+  </ul>
+{% endblock %}

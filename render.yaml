@@ -1,0 +1,17 @@
+# settings for deploying on render.com (free plan)
+services:
+  - type: web
+    name: summary-generator
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python -c "import summarygenerator"
+    startCommand: gunicorn app:app --workers 1 --timeout 120 --bind 0.0.0.0:$PORT
+    healthCheckPath: /about
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      # nltk data is downloaded in the build step into the project folder
+      - key: NLTK_DATA
+        value: /opt/render/project/src/nltk_data
+      - key: SECRET_KEY
+        generateValue: true

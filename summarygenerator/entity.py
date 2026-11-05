@@ -22,10 +22,8 @@ def ner(sample):
 
     entity_names = []
     for tree in chunked_sentences:
-    # Print results per sentence
-    # print extract_entity_names(tree)
         entity_names.extend(extract_entity_names(tree))
-    print (set(entity_names))
+
     return len(entity_names)
 
 
