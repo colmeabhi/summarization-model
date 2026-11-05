@@ -5,19 +5,17 @@ import numpy
 from .entity import namedEntityRecog
 from .feature_enhancer import enhance_features
 
-from .text_features import (
+from .features import (
     centroidSimilarity,
     numericToken,
-    posTagger,
     properNounScores,
-    remove_stop_words,
     sentenceLength,
     sentencePos,
     similarityScores,
-    split_into_sentences,
     tfIsf,
     thematicFeature,
 )
+from .preprocessing import posTagger, remove_stop_words, split_into_sentences
 
 
 
