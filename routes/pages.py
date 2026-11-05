@@ -38,3 +38,8 @@ def home():
 @pages.route('/how-it-works')
 def how_it_works():
     return render_template('how_it_works.html', active_page='how')
+
+
+@pages.route('/about')
+def about():
+    return render_template('about.html', active_page='about')
