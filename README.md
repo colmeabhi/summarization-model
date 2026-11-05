@@ -87,6 +87,20 @@ Response:
 The old endpoint `POST /post_summary` with `{"textString": "..."}` still works and
 returns `{"summary": "..."}`.
 
+## Deploying for free (Render)
+
+The repo has a `render.yaml` file, so Render can set everything up by itself.
+
+1. Make an account on https://render.com (you can sign in with GitHub).
+2. Click **New +** -> **Blueprint** and pick this repository.
+3. Render reads `render.yaml`, click **Apply** and wait for the build (around 5 minutes).
+4. The site will be at `https://summary-generator-xxxx.onrender.com`.
+
+After that every push to the branch redeploys it.
+
+Note: on the free plan the site goes to sleep after 15 minutes with no visitors, so the
+first visit after that takes about a minute to load.
+
 ## Tests
 
 ```bash
