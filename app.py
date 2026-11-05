@@ -1,7 +1,7 @@
 # coding: utf-8
 from flask import Flask, jsonify, render_template, request
 
-from summarygenerator import executeForAFile
+from summarygenerator import summarize
 
 
 app = Flask(__name__)
@@ -20,9 +20,9 @@ def summary_creator():
         return jsonify({'error': 'textString is required'}), 400
 
     text = request_data['textString']
-    final_text = executeForAFile(text)
+    result = summarize(text)
 
-    return jsonify({'summary': final_text})
+    return jsonify({'summary': result['summary']})
 
 
 if __name__ == '__main__':

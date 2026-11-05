@@ -1,10 +1,7 @@
-import os
-
 import numpy
 
 from .entity import namedEntityRecog
 from .feature_enhancer import enhance_features
-
 from .features import (
     centroidSimilarity,
     numericToken,
@@ -18,103 +15,83 @@ from .features import (
 from .preprocessing import posTagger, remove_stop_words, split_into_sentences
 
 
+# how much of the text to keep for each option on the website
+SUMMARY_LENGTHS = {
+    'short': 0.3,
+    'medium': 0.5,
+    'long': 0.7,
+}
 
-def executeForAFile(text) :
-
-    print(text)
-    sentences = split_into_sentences(text)
-    text_len = len(sentences)
+# texts shorter than this are just returned as they are
+MIN_SENTENCES = 3
 
 
+def build_feature_matrix(sentences):
+    """Makes a (number of sentences x 8) matrix, one column per feature."""
     tokenized_sentences = remove_stop_words(sentences)
-    tagged = posTagger(remove_stop_words(sentences))
+    tagged = posTagger(tokenized_sentences)
 
     tfIsfScore = tfIsf(tokenized_sentences)
-    similarityScore = similarityScores(tokenized_sentences)
 
-    print("\n\nProper Noun Score : \n")
-    properNounScore = properNounScores(tagged)
-    print(properNounScore)
-    centroidSimilarityScore = centroidSimilarity(sentences,tfIsfScore)
-    numericTokenScore = numericToken(tokenized_sentences)
-    namedEntityRecogScore = namedEntityRecog(sentences)
-    sentencePosScore = sentencePos(sentences)
-    sentenceLengthScore = sentenceLength(tokenized_sentences)
-    thematicFeatureScore = thematicFeature(tokenized_sentences)
+    features = [
+        thematicFeature(tokenized_sentences),
+        sentencePos(sentences),
+        sentenceLength(tokenized_sentences),
+        properNounScores(tagged),
+        numericToken(tokenized_sentences),
+        namedEntityRecog(sentences),
+        tfIsfScore,
+        centroidSimilarity(sentences, tfIsfScore),
+    ]
 
-    featureMatrix = []
-    featureMatrix.append(thematicFeatureScore)
-    featureMatrix.append(sentencePosScore)
-    featureMatrix.append(sentenceLengthScore)
-    featureMatrix.append(properNounScore)
-    featureMatrix.append(numericTokenScore)
-    featureMatrix.append(namedEntityRecogScore)
-    featureMatrix.append(tfIsfScore)
-    featureMatrix.append(centroidSimilarityScore)
+    # each feature is a row right now, transpose so each sentence is a row
+    return numpy.array(features, dtype=float).T
 
 
-    featureMat = numpy.zeros((len(sentences),8))
-    for i in range(8) :
-        for j in range(len(sentences)):
-            featureMat[j][i] = featureMatrix[i][j]
-
-    print("\n\n\nPrinting Feature Matrix : ")
-    print(featureMat)
-    print("\n\n\nPrinting Feature Matrix Normed : ")
-
-    feature_sum = []
-
-    for i in range(len(numpy.sum(featureMat,axis=1))) :
-        feature_sum.append(numpy.sum(featureMat,axis=1)[i])
-
-    print(featureMat)
-    for i in range(len(sentences)):
-        print(featureMat[i])
+def score_sentences(feature_matrix):
+    """Runs the features through the enhancer and adds them up per sentence."""
+    enhanced = enhance_features(feature_matrix)
+    return numpy.sum(enhanced, axis=1)
 
 
-    # Use modern RBM implementation (scikit-learn based)
-    temp = enhance_features(featureMat)
+def pick_sentences(sentences, scores, ratio):
+    """
+    Returns the indexes of the sentences to keep, in the original order.
+    The first sentence is always kept. The rest are picked from the
+    lowest enhanced scores (same as the original project).
+    """
+    ranked = sorted(range(len(sentences)), key=lambda i: scores[i])
+    how_many = max(1, int(len(sentences) * ratio))
 
-    print("\n\n")
-    print(numpy.sum(temp, axis=1))
+    picked = [0]
+    for index in ranked[:how_many]:
+        if index != 0:
+            picked.append(index)
 
-    enhanced_feature_sum = []
-    enhanced_feature_sum2 = []
+    return sorted(picked)
 
-    for i in range(len(numpy.sum(temp,axis=1))) :
-        enhanced_feature_sum.append([numpy.sum(temp,axis=1)[i],i])
-        enhanced_feature_sum2.append(numpy.sum(temp,axis=1)[i])
 
-    print(enhanced_feature_sum)
-    print("\n\n\n")
+def summarize(text, ratio=0.5):
+    """
+    Main function. Takes the text and returns a dict with the summary
+    and a few numbers to show on the result page.
+    """
+    sentences = split_into_sentences(text)
 
-    enhanced_feature_sum.sort(key=lambda x: x[0])
-    print(enhanced_feature_sum)
+    if len(sentences) < MIN_SENTENCES:
+        picked = list(range(len(sentences)))
+    else:
+        feature_matrix = build_feature_matrix(sentences)
+        scores = score_sentences(feature_matrix)
+        picked = pick_sentences(sentences, scores, ratio)
 
-    length_to_be_extracted = len(enhanced_feature_sum)//2
+    summary_sentences = [sentences[i] for i in picked]
 
-    print("\n\nThe text is : \n\n")
-    for x in range(len(sentences)):
-        print(sentences[x])
-
-    print("\n\n\nExtracted sentences : \n\n\n")
-    extracted_sentences = []
-    extracted_sentences.append([sentences[0], 0])
-
-    indeces_extracted = []
-    indeces_extracted.append(0)
-
-    for x in range(length_to_be_extracted) :
-        if(enhanced_feature_sum[x][1] != 0) :
-            extracted_sentences.append([sentences[enhanced_feature_sum[x][1]], enhanced_feature_sum[x][1]])
-            indeces_extracted.append(enhanced_feature_sum[x][1])
-
-    extracted_sentences.sort(key=lambda x: x[1])
-
-    finalText = ""
-    print("\n\n\nExtracted Final Text : \n\n\n")
-    for i in range(len(extracted_sentences)):
-        print("\n"+extracted_sentences[i][0])
-        finalText = finalText + extracted_sentences[i][0]
-
-    return finalText
+    return {
+        'summary': ' '.join(summary_sentences),
+        'sentences': summary_sentences,
+        'original_count': len(sentences),
+        'summary_count': len(summary_sentences),
+        'original_words': len(text.split()),
+        'summary_words': sum(len(s.split()) for s in summary_sentences),
+    }
