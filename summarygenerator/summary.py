@@ -3,8 +3,7 @@ import os
 import numpy
 
 from .entity import namedEntityRecog
-# Use simple RBM replacement to avoid Theano compatibility issues
-from .rbm_simple import test_rbm_simple as test_rbm
+from .feature_enhancer import enhance_features
 
 from .text_features import (
     centroidSimilarity,
@@ -76,8 +75,7 @@ def executeForAFile(text) :
 
 
     # Use modern RBM implementation (scikit-learn based)
-    temp = test_rbm(dataset = featureMat,learning_rate=0.1, training_epochs=14, batch_size=5,n_chains=5,
-             n_hidden=8)
+    temp = enhance_features(featureMat)
 
     print("\n\n")
     print(numpy.sum(temp, axis=1))
