@@ -1,15 +1,15 @@
-# coding: utf-8
 from flask import Flask, jsonify, render_template, request
 
+from config import Config
 from summarygenerator import summarize
 
 
 app = Flask(__name__)
+app.config.from_object(Config)
 
 
 @app.route('/')
 def index():
-    """Serve a minimal UI for interacting with the summariser."""
     return render_template('index.html')
 
 
@@ -26,5 +26,4 @@ def summary_creator():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
-
+    app.run(debug=app.config['DEBUG'], port=app.config['PORT'])
