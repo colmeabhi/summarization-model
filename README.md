@@ -7,6 +7,8 @@ It is an **extractive** summariser: every sentence is scored with 8 features (TF
 proper nouns, named entities, position, length, etc.), the scores are smoothed with PCA
 (this replaced the old Theano RBM) and the best sentences are kept in their original order.
 
+![How the summary generator works](docs/how-it-works.png)
+
 ## Project structure
 
 ```
